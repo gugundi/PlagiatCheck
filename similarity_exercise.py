@@ -2,6 +2,9 @@ import sys
 import os
 import mmh3
 import itertools
+import time
+
+from tqdm import tqdm
 
 
 #################### Utilities ######################
@@ -13,11 +16,105 @@ def listhash(l,seed):
 	return val 
 
 
+def shingle(q,s):
+    tokens = s.split(" ")
+    return [tokens[i:i+q] for i in range(0,len(tokens) - q + 1)]    
+
+
+def minhash(shin,k):
+    return  [min([listhash(shi,seed) for shi in shin]) for seed in range(k)]
+
+
+def signatures(docsDict:dict):
+    sigDict = {}
+
+    print("Creating signatures")
+    for key in tqdm(docsDict.keys()):
+        shin = shingle(q,docsDict[key])
+        minh = minhash(shin,k)
+        sigDict[key] = minh
+    return sigDict
+
+
+def jacard(sig_dic,doc1,doc2):
+    a = set(sig_dic[doc1])
+    b = set(sig_dic[doc2])
+
+    return float(len(a & b)) / len(a | b)
+
+
+def estJacard(sig_dic,doc1,doc2,k):
+    a = set(sig_dic[doc1])
+    b = set(sig_dic[doc2])
+
+    return len(a & b)/k
+
+
+def similar(sig_dic, docs, k):
+    sims = []
+
+    for pair in itertools.combinations(docs.keys(), 2):
+        sims.append([estJacard(sig_dic,pair[0],pair[1],k),pair[0],pair[1]])
+
+    sims.sort(key=lambda x: float(x[0]))
+    return sims
+
+
+def lsh_similar(sig_dic, docs, q, k, b, min_simi):
+    r = int(k/b)
+    bandDicts = []
+
+    # Dictionary for each band
+    for ii in range(b):
+        bandDict = {}
+
+        # Every signature for every band
+        for key,value in sig_dic.items():
+            cut = value[ii*r:(ii+1)*r]
+            bandkey = tuple(cut)
+            if bandkey not in bandDict.keys():
+                bandDict[bandkey] = [key]
+            else:
+                bandDict[bandkey].append(key)
+        
+        bandDicts.append(bandDict)
+
+ 
+    # Find candidates for each document
+    sims = []
+    for document in list(docs.keys()):
+        candidates = []
+        signature = sig_dic[document]
+
+        for ii in range(b):
+            cut = signature[ii*r:(ii+1)*r]
+            bandkey = tuple(cut)
+            if bandkey not in bandDicts[ii].keys():
+                continue
+            else:
+                candidates.extend(bandDicts[ii][bandkey])
+        
+        # For each candidate, see if they have a high similarity
+        candidates = set(candidates)
+        for candidate in candidates:
+            if candidate == document:
+                continue
+
+            sim = estJacard(sig_dic, document, candidate,k)
+            if sim > min_simi:
+                if [sim,candidate,document] not in sims:
+                    sims.append([sim,document,candidate])
+    sims.sort(key=lambda x: float(x[0]))
+    return sims
+
+
 
 ################### Similarity ######################
 q = 3 # length of shingle
-k = 100 # number of minhashes
+k = 20 # number of minhashes
 docs = {} #dictionary mapping document id to document contents
+min_sim = 0.00
+b = 20
 
 # read data sets
 srcfolder = os.path.dirname(os.path.abspath(__file__))
@@ -27,57 +124,41 @@ for file in os.listdir(datafolder):
     filepath = os.path.join(datafolder, file)
     f = open(filepath, 'r')
     docs[file] = f.read()
-    print("read document " + file)
-    f.close()
+    #print("read document " + file)
+    f.close() 
 
-def shingle(q,s:str):
-    tokens = s.split()
-    shingles = [tokens[i:i+q] for i in range(len(tokens) - q + 1) if len(tokens[i]) < 4]
-    return shingles
+#################### Testing #######################
 
-def minhash(shin,k):
-    return  [min([listhash(shi,seed) for shi in shin]) for seed in range(k)]
+def test(debug=False):
+    sigDict = signatures(docs)
 
-def signatures(docsDict:dict):
-    sigDict = {}
+    if debug:
+        shingles = [shingle(q,docs[doc]) for doc in docs]
+        print("These are the first 5 shingles in first doc:")
+        print(shingles[0][:5])
 
-    for key in docsDict.keys():
-        print(key)
-        shin = shingle(q,docsDict[key])
-        minh = minhash(shin,k)
-        sigDict[key] = minh
-    return sigDict
+        print("These are the minhashes of these shingles:")
+        print(minhash(shingles[0][:4],2))
 
-sigDict = signatures(docs)
+        sigDict = signatures(docs)
+        print("This is a part of the first signature in the signature dictionary")
+        print("There are:", len(list(sigDict.values())), " signatures (one for each document)")
+        print("Each signature have:", len(list(sigDict.values())[0]), " different hashes")
+        print("Some of these values are: ", list(sigDict.values())[0][:5])
 
-def jacard(doc1,doc2):
-    a = set(sigDict[doc1])
-    b = set(sigDict[doc2])
-    c = a.intersection(b)
-    #print("Estimated Jacard: ", len(c)/k)
-    #print("Exact Jacard: ", float(len(c)) / (len(a) + len(b) - len(c)))
-
-    return len(c)/k
-    #return float(len(c)) / (len(a) + len(b) - len(c))
-
-def similar():
-    for pair in itertools.combinations(docs.keys(), 2):
-        print("{0} - similarity for {1} and {2}".format(jacard(pair[0],pair[1]),pair[0],pair[1]))
-
-def test():
-    shingles = [shingle(q,docs[doc]) for doc in docs]
-    print("These are the first 5 shingles in first doc:")
-    print(shingles[0][:5])
-
-    print("These are the minhashes of these shingles:")
-    print(minhash(shingles[0][:4],2))
-
-    print("This is a part of the first signature in the signature dictionary")
-    print("There are:", len(list(sigDict.values())), " signatures (one for each document)")
-    print("Each signature have:", len(list(sigDict.values())[0]), " different hashes")
-    print("Some of these values are: ", list(sigDict.values())[0][:5])
 
     # Jacard Sim
-    similar()
+    start = time.time()
+    print("===================================== Jacard similarity ======================================")
+    sims = similar(sigDict, docs, k)
+    for sim in sims: print("| Sim: {:05.3f}   | Doc1: {:30s} | Doc2: {:30s} |".format(sim[0],sim[1],sim[2]))
+    print("--------------------------------------- time {:2.3f}s ------------------------------------------".format(time.time() - start))
+    print("")
+    # LSH
+    start = time.time()
+    print("====================================== LSH similarity ========================================")
+    lsh_sims = lsh_similar(sigDict,docs,q,k,b,min_sim)
+    for sim in lsh_sims: print("| Sim: {:05.3f}   | Doc: {:31s} | Cand: {:30s} |".format(sim[0],sim[1],sim[2]))
+    print("--------------------------------------- time {:2.3f}s ------------------------------------------".format(time.time() - start))
 
 test()
