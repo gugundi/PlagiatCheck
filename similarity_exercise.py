@@ -78,6 +78,13 @@ def LSH(sig_Dict):
         bandDicts[i] = bandDict
     return bandDicts
 
+def computeCandidates(sig):
+    cand = set()
+    for i in range(b):
+        sigKey = tuple(sig[int(rows*i):int(rows*(i+1))])
+        if sigKey in bandDicts[i]:
+            cand.update(bandDicts[i][sigKey])
+    return cand
 
 def lsh_similar(sig_dic, docs, q, k, b, min_simi):
     r = int(k/b)
@@ -125,7 +132,6 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
                     sims.append([sim,document,candidate])
     sims.sort(key=lambda x: float(x[0]))
     return sims
-
 
 ################### Similarity ######################
 q = 3 # length of shingle
