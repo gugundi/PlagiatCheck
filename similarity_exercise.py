@@ -36,6 +36,8 @@ def signatures(docsDict:dict):
         sigDict[key] = minh
     return sigDict
 
+def docSignature(doc):
+    return minhash(shingle(q,doc),k)
 
 def jacard(sig_dic,doc1,doc2):
     a = set(sig_dic[doc1])
@@ -155,7 +157,7 @@ bandDicts = {}
 
 # read data sets
 srcfolder = os.path.dirname(os.path.abspath(__file__))
-datafolder = os.path.join(srcfolder, "../DataandTemplate/ats_corpus_small")   # change to ats_corpus for large data set
+datafolder = os.path.join(srcfolder, "ats_corpus_small")   # change to ats_corpus for large data set
 
 i = 0
 for file in os.listdir(datafolder):
