@@ -62,6 +62,22 @@ def similar(sig_dic, docs, k, min_simi):
     sims.sort(key=lambda x: float(x[0]))
     return sims
 
+#New implementation of Locality Sensitive Hashing
+def LSH(sig_Dict):
+    #Build dictionary for each band
+    for i in range(b):
+        bandDict = {}
+        for key, value in sig_Dict.items():
+            #Tuple is used because lists can not be used as keys
+            bandKey = tuple(value[int(rows*i):int(rows*(i+1))])
+            bandValue = key
+            if bandKey not in bandDict:
+                bandDict[bandKey] = [bandValue]
+            else:
+                bandDict[bandKey].append(bandValue)
+        bandDicts[i] = bandDict
+    return bandDicts
+
 
 def lsh_similar(sig_dic, docs, q, k, b, min_simi):
     r = int(k/b)
@@ -111,17 +127,18 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
     return sims
 
 
-
 ################### Similarity ######################
 q = 3 # length of shingle
-k = 10 # number of minhashes
+k = 100 # number of minhashes
 docs = {} #dictionary mapping document id to document contents
 min_sim = 0.15
 b = 20
+rows = int(k/b)
+bandDicts = {}
 
 # read data sets
 srcfolder = os.path.dirname(os.path.abspath(__file__))
-datafolder = os.path.join(srcfolder, "ats_corpus")   # change to ats_corpus for large data set
+datafolder = os.path.join(srcfolder, "../DataandTemplate/ats_corpus_small")   # change to ats_corpus for large data set
 
 i = 0
 for file in os.listdir(datafolder):
@@ -165,7 +182,6 @@ def test(rebuildSigDict = False, debug = False):
         print("There are:", len(list(sigDict.values())), " signatures (one for each document)")
         print("Each signature have:", len(list(sigDict.values())[0]), " different hashes")
         print("Some of these values are: ", list(sigDict.values())[0][:5])
-
 
     # Jacard Sim
     start = time.time()
