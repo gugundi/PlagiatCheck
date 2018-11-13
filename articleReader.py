@@ -1,8 +1,11 @@
-import re
+import re, io
 
 def findArticles(filepath):
-    file = open(filepath, 'r')
+    file = io.open(filepath, 'r', encoding='utf8')
     fileContent = file.read()
-    regex = re.compile('(?<!=)\s=\s[\w+\s]+=')
+    regex = re.compile('\n\s(?<!=)\s{2}=\s[^=]+=.*')
     articles = regex.split(fileContent)
-    return articles
+    dictionary = {}
+    for x in range(len(articles)):
+        dictionary[x] = articles[x]
+    return dictionary
