@@ -51,13 +51,13 @@ def fastSignatures(docsDict:dict):
                                 for _ in range(k)], dtype=np.uint64).T
 
     for key in tqdm(docsDict.keys()):
-        #tokens = libShingle(q,docsDict[key])
+
         tokens = shingle(q,docsDict[key])
         hashvalues = np.ones(k, dtype=np.uint64)*_max_hash
 
         for to in tokens:
-            #hv = struct.unpack('<I', sha1(to.encode('utf-8')).digest()[:4])[0]
             hv = listhash(to,1)
+            # https://en.wikipedia.org/wiki/Universal_hashing
             phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
             hashvalues = np.minimum(phv, hashvalues)
         
