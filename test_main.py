@@ -21,7 +21,8 @@ def similar(sig_dic, docs, k, min_simi):
 def test(k, min_sim, docs, q, b, rebuildSigDict = False, debug = False):
     # Rebuild flag can be set to force rebuilding the signatures
     if rebuildSigDict:
-        sigDict = signature.signatures(docs, k)
+        #sigDict = signature.signatures(docs,q, k)
+        sigDict = signature.fastSignatures(docs,q,k,1)
         pickle.dump(sigDict, open( "sigDict.p", "wb" ) )
     else:
         # If rebuild is False, then try and load the model,
@@ -29,7 +30,7 @@ def test(k, min_sim, docs, q, b, rebuildSigDict = False, debug = False):
         try:
             sigDict = pickle.load(open("sigDict.p", "rb"))
         except (OSError, IOError) as e:
-            sigDict = signature.signatures(docs, k)
+            sigDict = signature.signatures(docs,q, k)
             pickle.dump(sigDict, open("sigDict.p", "wb"))
 
     # All debug code should be placed in here
