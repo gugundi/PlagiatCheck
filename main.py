@@ -1,7 +1,10 @@
 import articleReader
 
-dictionary = articleReader.findArticles("Dataset/wikitext-2/wiki.train.tokens")
-print(len(dictionary))
-print(dictionary[0].encode(encoding='utf8'))
-for x in dictionary:
-    print(x)
+# Test prints all the titles and the first three articles
+def articleReaderTest():
+    articleDict, titleDict = articleReader.findArticles("Dataset/wikitext-2/wiki.train.tokens")
+
+    print(str(articleDict[4]))
+    print(str(titleDict[4]))
+
+articleReaderTest()
