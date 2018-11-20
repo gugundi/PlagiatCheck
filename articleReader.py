@@ -11,14 +11,14 @@ def findArticles(filepath):
     for x in range(len(articles)):
         if x == 0:
             titleLine = articles[0].split('\n',2)[1]
-            title = ''.join(re.findall('[^=]+', titleLine)))
+            title = ''.join(re.findall('[^=]+', titleLine))
             titleDict[x] = title
 
         # if odd -> title
         if (x & 1):
             # TODO: assign to titleDict
             titleLine = articles[x].split('\n',2)[-1]
-            title = ''.join(re.findall('(?<=)[^=]+', titleLine)))
+            title = ''.join(re.findall('(?<=)[^=]+', titleLine))
             titleDict[int((x+1)/2)] = title
         else:
             # TODO: assign to articleDict
