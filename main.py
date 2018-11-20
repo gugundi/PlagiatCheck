@@ -1,12 +1,14 @@
 import os
 import test_main
+import sys
 
 
-q = 3 # length of shingle
-k = 100 # number of minhashes
+q = int(sys.argv[1]) # length of shingle
+k = int(sys.argv[2]) # number of minhashes
+b = int(sys.argv[3])
+min_sim = float(sys.argv[4])
+testMode = sys.argv[5].lower() == 'true'
 docs = {} #dictionary mapping document id to document contents
-min_sim = 0.15
-b = 20
 rows = int(k/b)
 bandDicts = {}
 
@@ -27,4 +29,8 @@ for file in os.listdir(datafolder):
     i+= 1
     if i == 100: break
 
-test_main.test(k, min_sim, docs, q, b, rebuildSigDict=False, debug=True)
+if testMode:
+    test_main.test(k, min_sim, docs, q, b, rebuildSigDict=False, debug=True)
+else:
+    print("LOL")
+
