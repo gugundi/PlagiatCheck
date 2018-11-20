@@ -1,5 +1,6 @@
-def LSH(sig_Dict):
+def LSH(sig_Dict, b, rows):
     #Build dictionary for each band
+    bandDicts = {}
     for i in range(b):
         bandDict = {}
         for key, value in sig_Dict.items():

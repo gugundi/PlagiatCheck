@@ -14,7 +14,7 @@ def estJacard(sig_dic,doc1,doc2,k):
 
 
 #Compute candidates to a signature
-def computeCandidates(sig):
+def computeCandidates(sig, b, bandDicts, rows):
     cand = set()
     for i in range(b):
         sigKey = tuple(sig[int(rows*i):int(rows*(i+1))])
@@ -23,7 +23,7 @@ def computeCandidates(sig):
     return cand
 
 #Computes the similarity of a document to the candidates
-def compCandSimilarity(sic_dic, doc, cands, sim):
+def compCandSimilarity(sic_dic, doc, cands, sim, k):
     measures = []
     for cand in cands:
         if not (cand == doc):

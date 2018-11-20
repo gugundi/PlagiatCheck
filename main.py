@@ -3,6 +3,8 @@ import test_main
 import sys
 import pickle
 from signature import fastSignatures
+from lsh import LSH
+from candidate import computeCandidates, compCandSimilarity
 
 
 def buildSignatureDict(rebuildSigDict, q, k):
@@ -55,4 +57,7 @@ sig_Dict = buildSignatureDict(rebuildSigDict, q, k)
 if testMode:
     test_main.test(sig_Dict, k, min_sim, docs, q, b, debug=True)
 else:
-    print("LOL")
+    bandDicts = LSH(sig_Dict, b, rows)
+    print(len(bandDicts.keys()))
+
+    
