@@ -27,4 +27,4 @@ for file in os.listdir(datafolder):
     i+= 1
     if i == 100: break
 
-test_main.test(k, min_sim, docs, q, b, rebuildSigDict=True, debug=True)
+test_main.test(k, min_sim, docs, q, b, rebuildSigDict=False, debug=True)

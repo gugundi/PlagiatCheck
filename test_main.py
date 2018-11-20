@@ -5,25 +5,13 @@ import signature
 import shingle
 import minHash
 import lsh_cand_sim
-
-
-def jacard(sig_dic,doc1,doc2):
-        a = set(sig_dic[doc1])
-        b = set(sig_dic[doc2])
-
-        return float(len(a & b)) / len(a | b)
-
-def estJacard(sig_dic,doc1,doc2,k):
-        a = set(sig_dic[doc1])
-        b = set(sig_dic[doc2])
-
-        return len(a & b)/k
+import similarity
 
 def similar(sig_dic, docs, k, min_simi):
     sims = []
 
     for pair in itertools.combinations(docs.keys(), 2):
-        sim = estJacard(sig_dic,pair[0],pair[1],k)
+        sim = similarity.estJacard(sig_dic,pair[0],pair[1],k)
         if sim > min_simi:
             sims.append([sim,pair[0],pair[1]])
 
@@ -34,7 +22,7 @@ def test(k, min_sim, docs, q, b, rebuildSigDict = False, debug = False):
     # Rebuild flag can be set to force rebuilding the signatures
     if rebuildSigDict:
         sigDict = signature.signatures(docs, k)
-        pickle.dump( sigDict, open( "sigDict.p", "wb" ) )
+        pickle.dump(sigDict, open( "sigDict.p", "wb" ) )
     else:
         # If rebuild is False, then try and load the model,
         # if it doesnt exist, build it

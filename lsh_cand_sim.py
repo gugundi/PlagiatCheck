@@ -1,8 +1,4 @@
-def estJacard(sig_dic,doc1,doc2,k):
-        a = set(sig_dic[doc1])
-        b = set(sig_dic[doc2])
-
-        return len(a & b)/k
+import similarity
 
 def lsh_similar(sig_dic, docs, q, k, b, min_simi):
     r = int(k/b)
@@ -44,7 +40,7 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
             if candidate == document:
                 continue
 
-            sim = estJacard(sig_dic, document, candidate,k)
+            sim = similarity.estJacard(sig_dic, document, candidate,k)
             if sim > min_simi:
                 if [sim,candidate,document] not in sims:
                     sims.append([sim,document,candidate])
