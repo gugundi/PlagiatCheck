@@ -14,12 +14,12 @@ def listhash(l,seed):
 	val = 0
 	for e in l:
 		val = val ^ mmh3.hash(e, seed)
-	return val 
+	return val
 
 
 def shingle(q,s):
     tokens = s.split(" ")
-    return [tokens[i:i+q] for i in range(0,len(tokens) - q + 1)]    
+    return [tokens[i:i+q] for i in range(0,len(tokens) - q + 1)]
 
 
 def minhash(shin,k):
@@ -115,10 +115,10 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
                 bandDict[bandkey] = [key]
             else:
                 bandDict[bandkey].append(key)
-        
+
         bandDicts.append(bandDict)
 
- 
+
     # Find candidates for each document
     sims = []
     for document in list(docs.keys()):
@@ -132,7 +132,7 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
                 continue
             else:
                 candidates.extend(bandDicts[ii][bandkey])
-        
+
         # For each candidate, see if they have a high similarity
         candidates = set(candidates)
         for candidate in candidates:
@@ -148,7 +148,7 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
 
 ################### Similarity ######################
 q = 3 # length of shingle
-k = 100 # number of minhashes
+k = 200 # number of minhashes
 docs = {} #dictionary mapping document id to document contents
 min_sim = 0.15
 b = 20
@@ -157,7 +157,7 @@ bandDicts = {}
 
 # read data sets
 srcfolder = os.path.dirname(os.path.abspath(__file__))
-datafolder = os.path.join(srcfolder, "ats_corpus_small")   # change to ats_corpus for large data set
+datafolder = os.path.join(srcfolder, "ats_corpus")   # change to ats_corpus for large data set
 
 i = 0
 for file in os.listdir(datafolder):
@@ -168,9 +168,9 @@ for file in os.listdir(datafolder):
 
     docs[file] = f.read()
     #print("read document " + file)
-    f.close() 
+    f.close()
     i+= 1
-    if i == 100: break
+    if i == 20: break
 
 #################### Testing #######################
 
@@ -209,7 +209,7 @@ def test(rebuildSigDict = False, debug = False):
     for sim in sims: print("| Sim: {:05.3f}   | Doc1: {:30s} | Doc2: {:30s} |".format(sim[0],sim[1],sim[2]))
     print("--------------------------------------- time {:2.3f}s ------------------------------------------".format(time.time() - start))
     print("")
-    
+
     # LSH
     start = time.time()
     print("====================================== LSH similarity ========================================")
@@ -217,4 +217,4 @@ def test(rebuildSigDict = False, debug = False):
     for sim in lsh_sims: print("| Sim: {:05.3f}   | Doc: {:31s} | Cand: {:30s} |".format(sim[0],sim[1],sim[2]))
     print("--------------------------------------- time {:2.3f}s ------------------------------------------".format(time.time() - start))
 
-test(rebuildSigDict=False)
+test(rebuildSigDict=True)

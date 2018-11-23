@@ -9,6 +9,7 @@ import struct
 import numpy as np
 
 from tqdm import tqdm
+from multiprocessing.pool import ThreadPool
 
 
 #################### Utilities ######################
@@ -17,11 +18,11 @@ def listhash(l,seed):
 	val = 0
 	for e in l:
 		val = val ^ mmh3.hash(e, seed,signed=False)
-	return val 
+	return val
 
 def shingle(q,s):
     tokens = s.split(" ")
-    return [tokens[i:i+q] for i in range(0,len(tokens) - q + 1)]    
+    return [tokens[i:i+q] for i in range(0,len(tokens) - q + 1)]
 
 
 def minhash(shin,k):
@@ -50,7 +51,7 @@ def fastSignatures(docsDict:dict):
                                 generator.randint(0, _mersenne_prime, dtype=np.uint64))
                                 for _ in range(k)], dtype=np.uint64).T
 
-    for key in tqdm(docsDict.keys()):
+    for key in docsDict.keys():
 
         tokens = shingle(q,docsDict[key])
         hashvalues = np.ones(k, dtype=np.uint64)*_max_hash
@@ -60,10 +61,51 @@ def fastSignatures(docsDict:dict):
             # https://en.wikipedia.org/wiki/Universal_hashing
             phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
             hashvalues = np.minimum(phv, hashvalues)
-        
+
         sigDict[key] = list(hashvalues)
-    
+
     return sigDict
+
+def fastSignature(tuple):
+	key, value = tuple
+	# http://en.wikipedia.org/wiki/Mersenne_prime
+	_mersenne_prime = (1 << 61) - 1
+	_max_hash = (1 << 32) - 1
+	_hash_range = (1 << 32)
+	sigDict = {}
+
+	generator = np.random.RandomState(1)
+	a,b = np.array([(generator.randint(1, _mersenne_prime, dtype=np.uint64),
+	                            generator.randint(0, _mersenne_prime, dtype=np.uint64))
+	                            for _ in range(k)], dtype=np.uint64).T
+
+	tokens = shingle(q,value)
+	hashvalues = np.ones(k, dtype=np.uint64)*_max_hash
+
+	for to in tokens:
+		hv = listhash(to,1)
+		# https://en.wikipedia.org/wiki/Universal_hashing
+		phv = np.bitwise_and((a * hv + b) % _mersenne_prime, np.uint64(_max_hash))
+		hashvalues = np.minimum(phv, hashvalues)
+
+	return key, list(hashvalues)
+
+def parallelSignatures(docsDict:dict):
+	keys = docsDict.keys()
+	numKeys = len(keys)
+	numProcesses = 4
+	parts = []
+	signalDictionary = {}
+
+	for i in range(numProcesses):
+		startidx = int(i*numKeys/numProcesses)
+		endidx = int((i+1)*numKeys/numProcesses)
+		parts.append(dict(list(docsDict.items())[startidx:endidx]))
+
+	pool = ThreadPool(processes=numProcesses)
+
+	signalDictionary = dict(pool.map(fastSignature, docsDict.items()))
+	return signalDictionary
 
 def jacard(sig_dic,doc1,doc2):
     a = set(sig_dic[doc1])
@@ -73,10 +115,10 @@ def jacard(sig_dic,doc1,doc2):
 
 
 def estJacard(sig_dic,doc1,doc2,k):
-    a = set(sig_dic[doc1])
-    b = set(sig_dic[doc2])
+	a = set(sig_dic[doc1])
+	b = set(sig_dic[doc2])
 
-    return len(a & b)/k
+	return len(a & b)/k
 
 
 def similar(sig_dic, docs, k, min_simi):
@@ -109,10 +151,10 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
                 bandDict[band_key] = [doc_key]
             else:
                 bandDict[band_key].append(doc_key)
-        
+
         bandDicts.append(bandDict)
 
- 
+
     # Find candidates for each document
     sims = []
     for document in list(docs.keys()):
@@ -126,7 +168,7 @@ def lsh_similar(sig_dic, docs, q, k, b, min_simi):
                 continue
             else:
                 candidates.extend(bandDicts[ii][band_key])
-        
+
         # For each candidate, see if they have a high similarity
         candidates = set(candidates)
         for candidate in candidates:
@@ -163,18 +205,18 @@ for file in os.listdir(datafolder):
 
     docs[file] = f.read()
     #print("read document " + file)
-    f.close() 
+    f.close()
     i+= 1
     if i == max_docs: break
 
 #################### Testing #######################
 
 def test(rebuildSigDict = False, debug = False, usePickle=False):
-    
+
     # Rebuild flag can be set to force rebuilding the signatures
     if rebuildSigDict:
         #sigDict = signatures(docs)
-        sigDict = fastSignatures(docs)
+        sigDict = parallelSignatures(docs)
         if usePickle: pickle.dump( sigDict, open( "sigDict.p", "wb" ) )
     else:
         # If rebuild is False, then try and load the model,
