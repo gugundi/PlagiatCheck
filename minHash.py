@@ -1,9 +1,80 @@
 import mmh3
-def listhash(l,seed):
-    val = 0
-    for e in l:
-        val = val ^ mmh3.hash(e, seed,signed=False)
-    return val 
+import random
+import numpy as np
 
-def minhash(shin,k):
-    return  [min([listhash(shi,seed) for shi in shin]) for seed in range(k)]
+
+# def listhash(l,seed):
+#     val = 0
+#     for e in l:
+#         val = val ^ mmh3.hash(e, seed,signed=False)
+#     return val 
+
+# def minhash(shin,k):
+#     return  [min([listhash(shi,seed) for shi in shin]) for seed in range(k)]
+
+
+# http://en.wikipedia.org/wiki/Mersenne_prime
+_mersenne_prime = (1 << 61) - 1
+_max_hash = (1 << 32) - 1
+_hash_range = (1 << 32)
+
+class MinHash(object):
+
+
+    def __init__(self, k=200, seed=1, shin_len=3, mode=None):
+
+        self.k = k
+        self.seed = seed
+        self.shinlen = shin_len
+        self.mode = mode
+        
+        if k > _hash_range:
+            # Because 1) we don't want the size to be too large, and
+            # 2) we are using 4 bytes to store the size value
+            raise ValueError("Cannot have more than %d number of\
+                    permutation functions" % _hash_range)
+
+        generator = np.random.RandomState(self.seed)
+
+        # Create parameters for a random bijective permutation function
+        # that maps a 32-bit hash value to another 32-bit hash value.
+        # http://en.wikipedia.org/wiki/Universal_hashing
+        self.permutations = np.array([(generator.randint(1, _mersenne_prime, dtype=np.uint64),
+                                    generator.randint(0, _mersenne_prime, dtype=np.uint64))
+                                    for _ in range(k)], dtype=np.uint64).T  
+    
+    def _init_hashvalues(self):
+        return np.ones(self.k, dtype=np.uint64)*_max_hash
+
+    def shingles(self,doc):
+        tokens = doc.split(" ")
+        return ["-".join(tokens[i:i+self.shinlen]) for i in range(len(tokens)-self.shinlen + 1)]
+
+    def signature(self,doc):
+        if self.mode == "fast":
+            return self.computeFastMinHash(doc)
+        # elif self.mode == "medium":
+        #     return self.computeMediumMinHash(doc)
+        else:
+            return self.computeMinHash(doc)
+
+
+    def computeMinHash(self,doc):
+        shingles = self.shingles(doc)
+        return [min([mmh3.hash(shi,seed) for shi in shingles]) for seed in range(self.seed,self.k+self.seed)]
+
+    def computeMediumMinHash(self,doc):
+        pass
+
+    def computeFastMinHash(self,doc):
+        shingles = self.shingles(doc)
+        hashvalues = self._init_hashvalues()
+    
+        for shin in shingles:
+            hv = mmh3.hash(shin,self.seed,signed=False)
+            # https://en.wikipedia.org/wiki/Universal_hashing
+            phv = np.bitwise_and((self.permutations[0] * hv + self.permutations[1]) % _mersenne_prime, np.uint64(_max_hash))
+            hashvalues = np.minimum(phv, hashvalues)
+        
+        return hashvalues
+    
