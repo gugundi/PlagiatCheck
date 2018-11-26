@@ -3,7 +3,7 @@ import os
 from lsh import LSH
 import time
 
-articleDict, titleDict = articleReader.findArticles("Dataset/wikitext-2/wiki.train.tokens")
+articleDict, titleDict = articleReader.findArticles("PlagiatCheck/Dataset/wikitext-2/wiki.train.tokens")
 
 docs = {} #dictionary mapping document id to document contents
 max_docs = 100
@@ -26,12 +26,13 @@ for file in os.listdir(datafolder):
     if i == max_docs: break
 
 def test(docDict=docs):
-    
+    fast_lsh = LSH(mode="fast",threshold=0.2)
+    #fast_lsh.buildSignatures(docDict)
+    fast_lsh.buildSignaturesParallel(docDict)
+
     # LSH
     start = time.time()
     print("====================================== LSH similarity ========================================")
-    fast_lsh = LSH(mode="fast",threshold=0.2)
-    fast_lsh.buildSignatures(docDict)
     sims = fast_lsh.computeInternalSimilarities()
     for sim in sims: print("| Sim: {:05.3f}   | Doc: {:31s} | Cand: {:30s} |".format(sim[0],sim[1],sim[2]))
     print("--------------------------------------- time {:2.3f}s ------------------------------------------".format(time.time() - start))

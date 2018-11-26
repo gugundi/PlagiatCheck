@@ -1,6 +1,7 @@
 import pickle
 from tqdm import tqdm
 from minHash import MinHash
+from multiprocessing.pool import ThreadPool
 
 class LSH(object):
 
@@ -32,17 +33,38 @@ class LSH(object):
 
     def addDoc(self,key,content):
         self.sigDict[key] = self.minHash.signature(content)
-        self.addBand(key,self.sigDict[key])
+        self._addBand(key,self.sigDict[key])
+
+    def _addDocParallel(self,tuple):
+        key,content = tuple
+        return key,self.minHash.signature(content)
 
     def buildSignatures(self, docs):
         for key,val in tqdm(docs.items()):
             self.addDoc(key,val)
-            
+        
+    def buildSignaturesParallel(self,docs):
+        keys = docs.keys()
+        numKeys = len(keys)
+        numProcesses = 4
+        parts = []
+
+        for i in range(numProcesses):
+            startidx = int(i*numKeys/numProcesses)
+            endidx = int((i+1)*numKeys/numProcesses)
+            parts.append(dict(list(docs.items())[startidx:endidx]))
+
+        pool = ThreadPool(processes=numProcesses)
+
+        self.sigDict = dict(pool.map(self._addDocParallel, docs.items()))
+        self._buildBands()
+
+
     def makeDump(self, fileName):
         pickle.dump(self.sigDict, open(fileName, "wb" ) )
 
     
-    def addBand(self,key,val):
+    def _addBand(self,key,val):
         for i in range(self.b):
             self.bandDicts[i]
             #Tuple is used because lists can not be used as keys
@@ -55,7 +77,7 @@ class LSH(object):
 
 
     #Compute candidates to a signature
-    def computeCandidates(self, sig):
+    def _computeCandidates(self, sig):
         cand = set()
         for i in range(self.b):
             sigKey = tuple(sig[int(self.rows*i):int(self.rows*(i+1))])
@@ -64,7 +86,7 @@ class LSH(object):
         return cand
 
     #Computes the similarity of a document to the candidates
-    def compCandSimilarity(self, signature, cands, key=None):
+    def _compCandSimilarity(self, signature, cands, key=None):
         measures = []
         for cand in cands:
             if not (cand == key):
@@ -75,16 +97,16 @@ class LSH(object):
 
     def findSimilarDocuments(self,content):
         signature = self.minHash.signature(content)
-        cands = self.computeCandidates(signature)
-        return self.compCandSimilarity(signature,cands)
+        cands = self._computeCandidates(signature)
+        return self._compCandSimilarity(signature,cands)
 
 
     def computeInternalSimilarities(self):
         sims = []
         for document,signature in list(self.sigDict.items()):
-            candidates = self.computeCandidates(signature)
+            candidates = self._computeCandidates(signature)
 
-            measures = self.compCandSimilarity(signature,candidates,document)
+            measures = self._compCandSimilarity(signature,candidates,document)
             
             for measure in measures:
                 if [measure[0],measure[1],document] not in sims:
@@ -95,7 +117,7 @@ class LSH(object):
     # Util functions
     def _buildBands(self):
         for key, value in self.sigDict.items():
-            self.addBand(key,value)
+            self._addBand(key,value)
 
     def _jacard(self,doc1,doc2):
         a = set(self.sigDict[doc1])
