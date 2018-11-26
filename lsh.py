@@ -42,18 +42,10 @@ class LSH(object):
     def buildSignatures(self, docs):
         for key,val in tqdm(docs.items()):
             self.addDoc(key,val)
-        
+
     def buildSignaturesParallel(self,docs):
         keys = docs.keys()
         numKeys = len(keys)
-        numProcesses = 4
-        parts = []
-
-        for i in range(numProcesses):
-            startidx = int(i*numKeys/numProcesses)
-            endidx = int((i+1)*numKeys/numProcesses)
-            parts.append(dict(list(docs.items())[startidx:endidx]))
-
         pool = ThreadPool(processes=numProcesses)
 
         self.sigDict = dict(pool.map(self._addDocParallel, docs.items()))
@@ -63,7 +55,7 @@ class LSH(object):
     def makeDump(self, fileName):
         pickle.dump(self.sigDict, open(fileName, "wb" ) )
 
-    
+
     def _addBand(self,key,val):
         for i in range(self.b):
             self.bandDicts[i]
@@ -107,7 +99,7 @@ class LSH(object):
             candidates = self._computeCandidates(signature)
 
             measures = self._compCandSimilarity(signature,candidates,document)
-            
+
             for measure in measures:
                 if [measure[0],measure[1],document] not in sims:
                     sims.append([measure[0],document,measure[1]])
