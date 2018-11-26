@@ -28,8 +28,10 @@ for file in os.listdir(datafolder):
 def test(docDict=docs):
     fast_lsh = LSH(mode="fast",threshold=0.2)
     #fast_lsh.buildSignatures(docDict)
-    fast_lsh.buildSignaturesParallel(docDict)
 
+    start = time.time()
+    fast_lsh.buildSignaturesParallel(docDict)
+    print("--------------------------------------- time {:2.3f}s ------------------------------------------".format(time.time() - start))
     # LSH
     start = time.time()
     print("====================================== LSH similarity ========================================")

@@ -1,7 +1,7 @@
 import pickle
 from tqdm import tqdm
 from minHash import MinHash
-from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 
 class LSH(object):
 
@@ -34,23 +34,22 @@ class LSH(object):
     def addDoc(self,key,content):
         self.sigDict[key] = self.minHash.signature(content)
         self._addBand(key,self.sigDict[key])
-
-    def _addDocParallel(self,tuple):
-        key,content = tuple
-        return key,self.minHash.signature(content)
+        return key
+    
+    def addDocParallel(self,tup):
+        key,content = tup
+        self.sigDict[key] = self.minHash.signature(content)
+        self._addBand(key,self.sigDict[key])
+        print("Added: " + key)
 
     def buildSignatures(self, docs):
         for key,val in tqdm(docs.items()):
             self.addDoc(key,val)
 
     def buildSignaturesParallel(self,docs):
-        keys = docs.keys()
-        numKeys = len(keys)
-        pool = ThreadPool(processes=numProcesses)
-
-        self.sigDict = dict(pool.map(self._addDocParallel, docs.items()))
-        self._buildBands()
-
+        pool = Pool(processes=4) 
+        pool.map(self.addDocParallel,docs.items())
+        
 
     def makeDump(self, fileName):
         pickle.dump(self.sigDict, open(fileName, "wb" ) )
