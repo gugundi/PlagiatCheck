@@ -15,6 +15,8 @@ class LSH(object):
         self.threshold = threshold
 
         # Check if k%b == 0
+        if (k % b != 0):
+            raise ValueError("k modulu b must be 0")
         self.rows = int(self.k/self.b)
         self.minHash = MinHash(self.k, seed, self.shinlen,self.mode)
         self.sigDict = {}
