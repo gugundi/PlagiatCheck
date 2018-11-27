@@ -7,7 +7,7 @@ import itertools
 
 class LSH(object):
 
-    def __init__(self, mode = None, sigDict=None, k=600, shinlen=3, b=40, seed=1,threshold=0.4):
+    def __init__(self, mode = None, sigDict=None, k=600, shinlen=9, b=60, seed=1, threshold=0.4):
         self.k = k
         self.b = b
         self.mode = mode
@@ -15,6 +15,8 @@ class LSH(object):
         self.threshold = threshold
 
         # Check if k%b == 0
+        if (k % b != 0):
+            raise ValueError("k modulo b must be 0")
         self.rows = int(self.k/self.b)
         self.minHash = MinHash(self.k, seed, self.shinlen,self.mode)
         self.sigDict = {}

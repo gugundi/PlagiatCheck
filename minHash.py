@@ -26,8 +26,14 @@ class MinHash(object):
         # http://en.wikipedia.org/wiki/Universal_hashing
         self.a, self.b = np.array([(generator.randint(1, _mersenne_prime, dtype=np.uint64),
                                     generator.randint(0, _mersenne_prime, dtype=np.uint64))
+<<<<<<< HEAD
                                     for _ in range(k)], dtype=np.uint64).T
 
+=======
+                                    for _ in range(k)], dtype=np.uint64).T  
+        self.c = np.array([generator.randint(0, _hash_range,dtype=np.uint32) for _ in range(k)],dtype=np.uint32).T
+    
+>>>>>>> d4238304c1985af73ac411432da9ac2e8864964c
     def _init_hashvalues(self):
         return np.ones(self.k, dtype=np.uint64)*_max_hash
 
@@ -48,9 +54,10 @@ class MinHash(object):
     def computeMinHash(self,doc):
         shingles = self.shingles(doc)
         return [min([mmh3.hash(shi,seed) for shi in shingles]) for seed in range(self.seed,self.k+self.seed)]
-
+        
     def computeMediumMinHash(self,doc):
         shingles = self.shingles(doc)
+<<<<<<< HEAD
         hv = min([mmh3.hash(shi,self.seed) for shi in shingles])
         return [mmh3.hash(str(hv),seed) for seed in range(self.seed+1,self.seed+self.k)]
 
@@ -60,9 +67,12 @@ class MinHash(object):
 
     def compute16bitHash(self,doc):
         shingles = self.shingles(doc)
+=======
+>>>>>>> d4238304c1985af73ac411432da9ac2e8864964c
         hashvalues = self._init_hashvalues()
-
+    
         for shin in shingles:
+<<<<<<< HEAD
             phvs = [mmh3.hash128(shin,i) for i in range(int(self.k/8))]
             finalphv = []
             for phv in phvs:
@@ -71,6 +81,14 @@ class MinHash(object):
 
         return hashvalues
 
+=======
+            hv = mmh3.hash(shin,self.seed,signed=False)
+            # https://en.wikipedia.org/wiki/Universal_hashing
+            phv = np.bitwise_and((self.a * hv + self.b) % _mersenne_prime, np.uint64(_max_hash))
+            hashvalues = np.minimum(phv, hashvalues)
+        
+        return hashvalues
+>>>>>>> d4238304c1985af73ac411432da9ac2e8864964c
 
     def computeFastMinHash(self,doc):
         shingles = self.shingles(doc)
@@ -79,7 +97,10 @@ class MinHash(object):
         for shin in shingles:
             hv = mmh3.hash(shin,self.seed,signed=False)
             # https://en.wikipedia.org/wiki/Universal_hashing
-            phv = np.bitwise_and((self.a * hv + self.b) % _mersenne_prime, np.uint64(_max_hash))
+            phv = np.bitwise_xor(self.c,hv)
             hashvalues = np.minimum(phv, hashvalues)
+<<<<<<< HEAD
 
+=======
+>>>>>>> d4238304c1985af73ac411432da9ac2e8864964c
         return hashvalues
