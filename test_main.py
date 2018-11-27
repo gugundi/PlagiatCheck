@@ -26,7 +26,7 @@ for file in os.listdir(datafolder):
     if i == max_docs: break
 
 def test(docDict=docs):
-    fast_lsh = LSH(mode="16bit",threshold=0.2)
+    fast_lsh = LSH(threshold=0.2)
     #fast_lsh.buildSignatures(docDict)
     fast_lsh.buildSignaturesParallel(docDict)
 
