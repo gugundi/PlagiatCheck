@@ -40,8 +40,6 @@ class LSH(object):
     def addDocParallel(self,tup):
         key,content = tup
         val = self.minHash.signature(content)
-        #self.sigDict[key] = val
-        #self._addBand(key,val)
         return key,val
 
     def buildSignatures(self, docs):
