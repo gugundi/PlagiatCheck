@@ -36,7 +36,7 @@ class LSH(object):
     def addDoc(self,key,content):
         self.sigDict[key] = self.minHash.signature(content)
         self._addBand(key,self.sigDict[key])
-    
+
     def addDocParallel(self,tup):
         key,content = tup
         val = self.minHash.signature(content)
@@ -47,14 +47,14 @@ class LSH(object):
             self.addDoc(key,val)
 
     def buildSignaturesParallel(self,docs):
-        pool = Pool(processes=4) 
+        pool = Pool(processes=4)
         iters = itertools.islice(docs.items(),None)
 
         for key,val in tqdm(pool.imap_unordered(self.addDocParallel,iters),total=len(docs)):
             self.sigDict[key] = val
 
         self._buildBands()
-        
+
     def makeDump(self, fileName):
         pickle.dump(self.sigDict, open(fileName, "wb" ) )
 
