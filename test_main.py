@@ -24,11 +24,7 @@ for file in os.listdir(datafolder):
     if i == max_docs: break
 
 def test(docDict=docs):
-<<<<<<< HEAD
-    fast_lsh = LSH(mode="fast",threshold=0.2)
-=======
     fast_lsh = LSH(threshold=0.2)
->>>>>>> d4238304c1985af73ac411432da9ac2e8864964c
     #fast_lsh.buildSignatures(docDict)
     fast_lsh.buildSignatures(docDict)
 
@@ -43,11 +39,10 @@ def testBuildSignatures():
     fast_lsh = LSH(mode="fast",threshold=0.2)
     last_time = False
     j = 0
-    #print(str(j))
     while not last_time:
         articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j)
-        fast_lsh.buildSignatures(articleDict)
-        # fast_lsh.buildSignaturesParallel(articleDict)
+        # fast_lsh.buildSignatures(articleDict)
+        fast_lsh.buildSignaturesParallel(articleDict)
         j += 1
     testLSH(fast_lsh)
 
