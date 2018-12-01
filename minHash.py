@@ -41,8 +41,6 @@ class MinHash(object):
             return self.computeFastMinHash(doc)
         elif self.mode == "medium":
             return self.computeMediumMinHash(doc)
-        elif self.mode == "16bit":
-            return self.compute16bitHash(doc)
         else:
             return self.computeMinHash(doc)
 

@@ -8,7 +8,7 @@ import itertools
 
 class LSH(object):
 
-    def __init__(self, mode = None, sigDict=None, k=600, shinlen=9, b=60, seed=1, threshold=0.4):
+    def __init__(self, mode = "slow", sigDict=None, k=600, shinlen=4, b=60, seed=1, threshold=0.4):
         self.k = k
         self.b = b
         self.mode = mode
@@ -50,14 +50,14 @@ class LSH(object):
         for key,val in tqdm(docs.items()):
             self.addDoc(key,val)
 
-    # def buildSignaturesParallel(self,docs):
-    #     pool = Pool()
-    #     iters = itertools.islice(docs.items(),None)
+    def buildSignaturesParallel(self,docs):
+        pool = Pool()
+        iters = itertools.islice(docs.items(),None)
 
-    #     for key,val in tqdm(pool.imap_unordered(self.addDocParallel,iters),total=len(docs)):
-    #         self.sigDict[key] = val
+        for key,val in tqdm(pool.imap_unordered(self.addDocParallel,iters),total=len(docs)):
+            self.sigDict[key] = val
 
-    #     self._buildBands()
+        self._buildBands()
 
 
     def makeDump(self, fileName):
