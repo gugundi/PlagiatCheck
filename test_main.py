@@ -51,17 +51,21 @@ def wikiTestParallel(MinHashMode=None):
     j = 0
     start = time.time()
     total_file_time = 0
+    testTitleDict = {}
 
     pool = Pool()
     while not last_time:
         filetimestart = time.time()
         articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j)
+        testTitleDict.update(titleDict)
+
         total_file_time += time.time() - filetimestart
         iters = itertools.islice(articleDict.items(),None)
         for key,val in tqdm(pool.imap_unordered(lsh.addDocParallel,iters,chunksize=len(articleDict)//16),total=len(articleDict)):
             lsh.sigDict[key] = val
         j += 1
-
+    
+    
     lsh._buildBands()
 
     # Printing
@@ -72,7 +76,7 @@ def wikiTestParallel(MinHashMode=None):
     start = time.time()
     print("====================================== LSH similarity ========================================")
     sims = lsh.computeInternalSimilarities()
-    for sim in sims: print("|| Sim: {:05.3f} | Doc: {:4.0f} | Cand: {:4.0f} ||".format(sim[0],sim[1],sim[2]))
+    for sim in sims: print("|| Sim: {:05.3f} | Doc: {:31.31s} | Cand: {:30.30s} ||".format(sim[0],testTitleDict[sim[1]],testTitleDict[sim[2]]))
     print("========================================== Stats =============================================")
     print("||      Sims over threshold {:1.2f}: {:2.0f}         |                   Time: {:2.3f}                ||".format(lsh.threshold,len(sims),time.time() - start))
     print("==============================================================================================")
@@ -89,18 +93,10 @@ def wikiTest(MinHashMode=None):
         filetimestart = time.time()
         articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j)
         total_file_time += time.time() - filetimestart
-        
-        print(articleDict[4], "JAAAAAAAAAAAA")
-        print(articleDict[5], "JAAAAAAAAAAAA")
-        print(articleDict[6], "JAAAAAAAAAAAA")
-        print(articleDict[7], "JAAAAAAAAAAAA")
-        print(articleDict[8], "JAAAAAAAAAAAA")
-        print(articleDict[9], "JAAAAAAAAAAAA")
-
-        #lsh.buildSignatures(articleDict)
+        lsh.buildSignatures(articleDict)
         j += 1
 
-    #lsh._buildBands()
+    lsh._buildBands()
 
     # Printing
     print("============================ Time spent loading files: {:3.2f}s =================================".format(total_file_time))
