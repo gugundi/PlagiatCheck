@@ -1,6 +1,7 @@
 import pickle
 from tqdm import tqdm
 from minHash import MinHash
+import multiprocessing
 from multiprocessing import Pool
 import itertools
 
@@ -13,6 +14,7 @@ class LSH(object):
         self.mode = mode
         self.shinlen = shinlen
         self.threshold = threshold
+        
 
         # Check if k%b == 0
         if (k % b != 0):
@@ -48,14 +50,15 @@ class LSH(object):
         for key,val in tqdm(docs.items()):
             self.addDoc(key,val)
 
-    def buildSignaturesParallel(self,docs):
-        pool = Pool(processes=4)
-        iters = itertools.islice(docs.items(),None)
+    # def buildSignaturesParallel(self,docs):
+    #     pool = Pool()
+    #     iters = itertools.islice(docs.items(),None)
 
-        for key,val in tqdm(pool.imap_unordered(self.addDocParallel,iters),total=len(docs)):
-            self.sigDict[key] = val
+    #     for key,val in tqdm(pool.imap_unordered(self.addDocParallel,iters),total=len(docs)):
+    #         self.sigDict[key] = val
 
-        self._buildBands()
+    #     self._buildBands()
+
 
     def makeDump(self, fileName):
         pickle.dump(self.sigDict, open(fileName, "wb" ) )
