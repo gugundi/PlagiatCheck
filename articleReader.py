@@ -12,16 +12,12 @@ def findArticles(filepath, chunk):
     last = False
     if len(articles) < (chunk+1)*chunk_size:
         last = True
-    try:
-        if chunk == 0:
-            first_chunk = True
-            articles = articles[0:chunk_size+1]
-        else:
-            articles = articles[chunk*chunk_size+1:(chunk+1)*chunk_size]
-    except (OSError, IOError) as e:
-        articles = articles[chuck*chunk_size+1:]
-        last = True
-        raise ValueError("Could not load signature dictionary with name %s" % sigDict)
+
+    if chunk == 0:
+        first_chunk = True
+        articles = articles[0:chunk_size+1]
+    else:
+        articles = articles[chunk*chunk_size+1:(chunk+1)*chunk_size]
 
     articleDict = {}
     titleDict = {}

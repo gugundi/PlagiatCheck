@@ -1,7 +1,11 @@
 import articleReader
 import os
 from lsh import LSH
+import itertools
+from tqdm import tqdm
 import time
+import multiprocessing
+from multiprocessing import Pool
 
 docs = {} #dictionary mapping document id to document contents
 max_docs = 100
@@ -39,11 +43,19 @@ def testBuildSignatures():
     fast_lsh = LSH(mode="fast",threshold=0.2)
     last_time = False
     j = 0
+
+    pool = Pool()
     while not last_time:
-        articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j)
-        # fast_lsh.buildSignatures(articleDict)
-        fast_lsh.buildSignaturesParallel(articleDict)
+        articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-2/wiki.train.tokens", j)
+        iters = itertools.islice(articleDict.items(),None)
+        #fast_lsh.buildSignatures(articleDict)
+        #fast_lsh.buildSignaturesParallel(articleDict)
+        for key,val in tqdm(pool.imap_unordered(fast_lsh.addDocParallel,iters),total=len(docs)):
+            fast_lsh.sigDict[key] = val
         j += 1
+
+    fast_lsh._buildBands()
+
     testLSH(fast_lsh)
 
 def testLSH(fast_lsh):
@@ -55,4 +67,6 @@ def testLSH(fast_lsh):
     print("--------------------------------------- time {:2.3f}s ------------------------------------------".format(time.time() - start))
 
 # test()
-testBuildSignatures()
+if __name__ == '__main__':
+    testBuildSignatures()
+
