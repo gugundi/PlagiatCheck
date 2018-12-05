@@ -9,45 +9,60 @@ from multiprocessing import Pool
 import sys
 import argparse
 
-def stringIsInternal(s):
-    if s.lower() == 'true':
-        return True
-    return False
+def stringToBool(s):
+    return s.lower() == 'true' or s.lower() == '1'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--k', type=int, default=600,
                     help='Number of hash functions')
 parser.add_argument('--b', type=int, default=60,
                     help='Number of bands')
+parser.add_argument('--q', type=int, default=4,
+                    help='Length of shingles')
+parser.add_argument('--threshold', type=float, default=0.4,
+                    help='Treshold for similarity')
+parser.add_argument('--seed', type=int, default=1,
+                    help='Seed for MinHash')
+parser.add_argument('--chunkSize', type=int, default=5000,
+                    help='Size of data chunks')
 parser.add_argument('--mode', type=str, default='fast',
                     help='Mode of MinHash can be slow or fast')
-parser.add_argument("--internal", type=stringIsInternal, nargs='?',
+parser.add_argument("--internal", type=stringToBool, nargs='?',
                         const=True, default='false',
                         help="Internal Wikipedia similarities")
+parser.add_argument('--makeDump', type=str, default=None,
+                        help="Make dump of signature matrix")
 parser.add_argument('--filePath', type=str, default=None,
                     help='Filepath for file to compare')
+parser.add_argument('--sigDict', type=str, default=None,
+                    help='Signature dict file')
 args = parser.parse_args()
 
 def wikiParallel(MinHashMode=None):
-    lsh = LSH(mode=MinHashMode, k=args.k, b=args.b)
+    lsh = LSH(mode=MinHashMode, sigDict=args.sigDict, k=args.k, shinlen=args.q, b=args.b, seed=args.seed, threshold=args.threshold)
     last_time = False
     j = 0
     start = time.time()
     total_file_time = 0
     testTitleDict = {}
-
+    chunkSize = args.chunkSize
+    if args.sigDict is not None:
+        chunkSize = 70000
+        
     pool = Pool()
     while not last_time:
         filetimestart = time.time()
-        articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j)
+        articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j, chunkSize)
         testTitleDict.update(titleDict)
 
         total_file_time += time.time() - filetimestart
-        iters = itertools.islice(articleDict.items(),None)
-        for key,val in tqdm(pool.imap_unordered(lsh.addDocParallel,iters,len(articleDict)//16)),total=len(articleDict)):
-            lsh.sigDict[key] = val
+        if args.sigDict is None:
+            iters = itertools.islice(articleDict.items(),None)
+            for key,val in tqdm(pool.imap_unordered(lsh.addDocParallel,iters,len(articleDict)//16),total=len(articleDict)):
+                lsh.sigDict[key] = val
         j += 1
-     
+    if args.makeDump is not None:
+        lsh.makeDump(args.makeDump)
     lsh._buildBands()
 
     if not args.internal:

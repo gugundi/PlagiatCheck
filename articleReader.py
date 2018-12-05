@@ -1,9 +1,9 @@
 import re, io
 
-def findArticles(filepath, chunk):
+def findArticles(filepath, chunk, chunkSize):
 
     # articles = chunk_size/2
-    chunk_size = 10000
+    chunk_size = chunkSize*2
 
     file = io.open(filepath, 'r', encoding='utf8')
     fileContent = file.read()

@@ -8,7 +8,7 @@ import itertools
 
 class LSH(object):
 
-    def __init__(self, mode = "slow", sigDict=None, k=600, shinlen=4, b=60, seed=1, threshold=0.4):
+    def __init__(self, mode, sigDict, k, shinlen, b, seed, threshold):
         self.k = k
         self.b = b
         self.mode = mode
