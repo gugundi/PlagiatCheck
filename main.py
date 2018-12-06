@@ -15,7 +15,7 @@ def stringToBool(s):
 parser = argparse.ArgumentParser()
 parser.add_argument('--k', type=int, default=600,
                     help='Number of hash functions')
-parser.add_argument('--b', type=int, default=60,
+parser.add_argument('--b', type=int, default=100,
                     help='Number of bands')
 parser.add_argument('--q', type=int, default=4,
                     help='Length of shingles')
@@ -45,14 +45,11 @@ def wikiParallel(MinHashMode=None):
     start = time.time()
     total_file_time = 0
     testTitleDict = {}
-    chunkSize = args.chunkSize
-    if args.sigDict is not None:
-        chunkSize = 70000
-        
+
     pool = Pool()
     while not last_time:
         filetimestart = time.time()
-        articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j, chunkSize)
+        articleDict, titleDict, last_time = articleReader.findArticles("Dataset/wikitext-103/wiki.train.tokens", j, args.chunkSize)
         testTitleDict.update(titleDict)
 
         total_file_time += time.time() - filetimestart
