@@ -48,7 +48,7 @@ def wikiParallel(MinHashMode=None):
     chunkSize = args.chunkSize
     if args.sigDict is not None:
         chunkSize = 70000
-        
+
     pool = Pool()
     while not last_time:
         filetimestart = time.time()
