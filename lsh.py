@@ -20,7 +20,7 @@ class LSH(object):
         if (k % b != 0):
             raise ValueError("k modulo b must be 0")
         self.rows = int(self.k/self.b)
-        if (1/self.b) ** (1/self.rows) < 1/2:
+        if (1/self.b) ** (1/self.rows) > 1/2:
             raise ValueError("Threshold error: similarity where probability of becoming a candidate is too low")
         self.minHash = MinHash(self.k, seed, self.shinlen,self.mode)
         self.sigDict = {}
